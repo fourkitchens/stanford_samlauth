@@ -1,0 +1,21 @@
+{
+    "name": "su-sws/stanford_samlauth",
+    "type": "drupal-custom-module",
+    "license": "GPL-2.0-or-later",
+    "minimum-stability": "dev",
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
+    "require": {
+        "drupal/r4032login": "^2.2",
+        "drupal/require_login": "^3.0",
+        "drupal/samlauth": "^3.9"
+    },
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    }
+}
