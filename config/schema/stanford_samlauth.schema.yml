@@ -1,0 +1,74 @@
+# Schema for the configuration files of the Stanford SAML Authentication module.
+stanford_samlauth.role_map:
+  type: mapping
+  mapping:
+    role:
+      type: string
+      label: Role ID
+    attribute:
+      type: string
+      label: SAML Attribute
+    value:
+      type: string
+      label: Value of the attribute
+
+stanford_samlauth.settings:
+  type: config_object
+  label: 'Stanford SAML Authentication settings'
+  mapping:
+    hide_local_login:
+      type: boolean
+      label: 'Hide the local login form'
+    local_login_fieldset_label:
+      type: string
+      label: Local login fieldset label when exposed
+    local_login_fieldset_open:
+      type: boolean
+      label: Fieldset default open state
+    allowed:
+      type: mapping
+      label: Restriction settings
+      mapping:
+        restrict:
+          type: boolean
+          label: Restrict access to the site
+        users:
+          type: sequence
+          label: Allowed SunetIDs
+          sequence:
+            type: string
+            label: SunetID
+        affiliations:
+          type: sequence
+          label: Allowed Affiliations
+          sequence:
+            type: string
+            label: Affiliation label
+        groups:
+          type: sequence
+          label: Allowed Workgroups
+          sequence:
+            type: string
+            label: Groupgroup
+    role_mapping:
+      type: mapping
+      label: Role Mapping
+      mapping:
+        workgroup_api:
+          type: mapping
+          label: Workgroup API settings
+          mapping:
+            cert:
+              type: string
+              label: Path to Workgroup API Cert file
+            key:
+              type: string
+              label: Path to Workgroup API Key file
+        reevaluate:
+          type: string
+          label: Reevaluation rule
+        mapping:
+          type: sequence
+          label: Role Mappings
+          sequence:
+            type: stanford_samlauth.role_map

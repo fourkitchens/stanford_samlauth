@@ -1,0 +1,113 @@
+<?php
+
+/**
+ * @file
+ * Migrate data from stanford_ssp module.
+ */
+
+use Drupal\user\RoleInterface;
+
+/**
+ * Implements hook_install().
+ */
+function stanford_samlauth_install() {
+  $field_mapping_config = \Drupal::configFactory()
+    ->getEditable('samlauth_user_fields.mappings');
+
+  // Make sure there weren't configured field mappings already.
+  if (!$field_mapping_config->get('field_mappings')) {
+    $field_mapping_config->set('field_mappings', [
+      [
+        'attribute_name' => 'displayName',
+        'field_name' => 'su_display_name',
+        'link_user_order' => NULL,
+      ],
+    ])->save();
+  }
+
+  $samlauth_config = \Drupal::configFactory()
+    ->getEditable('samlauth.authentication');
+
+  // Some settings have already been configured. Don't overwrite them.
+  if ($samlauth_config->get('sp_entity_id')) {
+    return;
+  }
+
+  $roles = user_roles(TRUE);
+  unset($roles[RoleInterface::AUTHENTICATED_ID]);
+  $role_ids = array_combine(array_keys($roles), array_keys($roles));
+
+  // Set the SamlAuth settings.
+  $samlauth_config
+    ->set('sp_entity_id', '')
+    ->set('unique_id_attribute', 'uid')
+    ->set('sp_x509_certificate', 'file:/path/to/file.crt')
+    ->set('sp_private_key', 'file:/path/to/file.key')
+    ->set('idp_certs', [])
+    ->set('sp_name_id_format', 'urn:oasis:names:tc:SAML:2.0:nameid-format:transient')
+    ->set('idp_entity_id', 'https://idp.stanford.edu/')
+    ->set('idp_single_sign_on_service', 'https://login.stanford.edu/idp/profile/SAML2/Redirect/SSO')
+    ->set('map_users_roles', $role_ids)
+    ->set('map_users_name', TRUE)
+    ->set('map_users_mail', TRUE)
+    ->set('create_users', TRUE)
+    ->set('user_name_attribute', 'uid')
+    ->set('user_mail_attribute', 'mail')
+    ->save();
+
+  $stanford_samlauth_config = \Drupal::configFactory()
+    ->getEditable('stanford_samlauth.settings');
+
+  $modules = \Drupal::moduleHandler();
+  $module_installer = \Drupal::service('module_installer');
+
+  if ($modules->moduleExists('simplesamlphp_auth')) {
+    $saml_config = \Drupal::config('simplesamlphp_auth.settings');
+
+    if ($modules->moduleExists('stanford_ssp')) {
+      $ssp_config = \Drupal::config('stanford_ssp.settings');
+
+      // Convert the simplesamlphp role mapping to a structured array.
+      $role_mappings = [];
+      foreach (explode('|', $saml_config->get('role.population')) as $mapping) {
+        [$role, $condition] = explode(':', $mapping, 2);
+        [$attribute, , $value] = explode(',', $condition, 3);
+        $role_mappings[] = [
+          'role' => $role,
+          'attribute' => $attribute,
+          'value' => $value,
+        ];
+      }
+
+      $role_eval = ['none', 'all', 'new'];
+      $stanford_samlauth_config->set('hide_local_login', $ssp_config->get('hide_local_login'))
+        ->set('local_login_fieldset_label', $ssp_config->get('local_login_fieldset_label') ?: 'Drupal Login')
+        ->set('local_login_fieldset_open', $ssp_config->get('local_login_fieldset_open') ?: FALSE)
+        ->set('role_mapping.workgroup_api.cert', $ssp_config->get('workgroup_api_cert'))
+        ->set('role_mapping.workgroup_api.key', $ssp_config->get('workgroup_api_key'))
+        ->set('role_mapping.reevaluate', $role_eval[$saml_config->get('role.eval_every_time')])
+        ->set('role_mapping.mapping', $role_mappings)
+        ->set('allowed.restrict', $ssp_config->get('restriction') != 'all')
+        ->set('allowed.affiliations', $ssp_config->get('allowed.affiliations'))
+        ->set('allowed.users', $ssp_config->get('allowed.users'))
+        ->set('allowed.groups', $ssp_config->get('allowed.groups'))
+        ->save();
+      $module_installer->uninstall(['stanford_ssp']);
+    }
+
+    $module_installer->uninstall(['simplesamlphp_auth']);
+  }
+
+  // Set auto logout to 12 hours.
+  \Drupal::configFactory()
+    ->getEditable('autologout.settings')
+    ->set('timeout', 43200)
+    ->save();
+
+  // Add no index header and excluded paths.
+  \Drupal::configFactory()
+    ->getEditable('r4032login.settings')
+    ->set('add_noindex_header', TRUE)
+    ->set('match_noredirect_pages', "/jsonapi\r\n/jsonapi/*\r\n/subrequests")
+    ->save();
+}

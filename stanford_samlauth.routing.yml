@@ -1,0 +1,45 @@
+stanford_samlauth.simplesamlphp:
+  path: '/saml_login'
+  defaults:
+    _controller: '\Drupal\samlauth\Controller\SamlController::login'
+    _title: 'SAML login'
+  requirements:
+    _user_is_logged_in: 'FALSE'
+  options:
+    _maintenance_access: TRUE
+    no_cache: TRUE
+
+stanford_samlauth.sso_login:
+  path: '/sso/login'
+  defaults:
+    _controller: '\Drupal\samlauth\Controller\SamlController::login'
+    _title: 'SAML login'
+  requirements:
+    _user_is_logged_in: 'FALSE'
+  options:
+    _maintenance_access: TRUE
+    no_cache: TRUE
+
+stanford_samlauth.settings:
+  path: '/admin/config/people/saml/authorization'
+  defaults:
+    _title: 'Authorization'
+    _form: 'Drupal\stanford_samlauth\Form\SamlAuthAuthorizationsForm'
+  requirements:
+    _permission: 'configure saml'
+
+stanford_samlauth.role_mapping:
+  path: '/admin/config/people/saml/user-roles'
+  defaults:
+    _title: 'User Role Mapping'
+    _form: 'Drupal\stanford_samlauth\Form\RoleMappingSettingsForm'
+  requirements:
+    _permission: 'configure saml'
+
+stanford_samlauth.create_user:
+  path: '/admin/people/create/saml'
+  defaults:
+    _title: 'Add SAML User'
+    _form: 'Drupal\stanford_samlauth\Form\SamlAuthCreateUserForm'
+  requirements:
+    _permission: 'administer users'

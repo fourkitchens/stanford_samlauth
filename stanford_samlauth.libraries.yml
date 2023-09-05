@@ -1,0 +1,4 @@
+samlauth:
+  version: VERSION
+  js:
+    js/stanford_samlauth.js: {}

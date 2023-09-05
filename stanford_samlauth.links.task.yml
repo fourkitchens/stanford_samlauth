@@ -1,0 +1,11 @@
+stanford_samlauth.authorization:
+  title: 'Authorization'
+  route_name: stanford_samlauth.settings
+  base_route: samlauth.samlauth_configure_form
+  weight: 9
+
+stanford_samlauth.role_mapping:
+  title: 'User Role Mapping'
+  route_name: stanford_samlauth.role_mapping
+  base_route: samlauth.samlauth_configure_form
+  weight: 8

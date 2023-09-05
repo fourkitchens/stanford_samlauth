@@ -1,0 +1,10 @@
+services:
+  stanford_samlauth.workgroup_api:
+    class: Drupal\stanford_samlauth\Service\WorkgroupApi
+    arguments: [ '@config.factory', '@http_client', '@logger.factory' ]
+
+  stanford_samlauth.event_subscriber:
+    class: Drupal\stanford_samlauth\EventSubscriber\StanfordSamlAuthSubscriber
+    arguments: [ '@stanford_samlauth.workgroup_api', '@config.factory', '@current_user', '@path.matcher', '@path.current', '@path_alias.manager' ]
+    tags:
+      - { name: event_subscriber }

@@ -1,0 +1,4 @@
+administer stanford_samlauth configuration:
+  title: 'Administer stanford_samlauth configuration'
+  description: 'Optional description.'
+  restrict access: true

@@ -1,0 +1,6 @@
+services:
+  stanford_samlauth.commands:
+    class: Drupal\stanford_samlauth\Drush\Commands\StanfordSamlAuthCommands
+    arguments: [ '@externalauth.authmap', '@form_builder', '@config.factory' ]
+    tags:
+      - { name: drush.command }
