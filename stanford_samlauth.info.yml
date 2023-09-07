@@ -3,6 +3,7 @@ type: module
 description: Adds enhancements to SAML Authentication module.
 package: Stanford
 core_version_requirement: ^9 || ^10
+version: 1.0.1
 dependencies:
   - drupal:path_alias
   - autologout:autologout
