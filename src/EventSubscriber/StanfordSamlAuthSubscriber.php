@@ -133,7 +133,7 @@ class StanfordSamlAuthSubscriber implements EventSubscriberInterface {
     // When configured to use the workgroup API, fetch all the user's workgroups
     // and compare them to the role mapping settings.
     if ($this->stanfordConfig->get('role_mapping.workgroup_api.cert')) {
-      $workgroups = $this->workgroupApi->getAllUserWorkgroups($account->getAccountName());
+      $workgroups = $this->workgroupApi->getAllUserWorkgroups(reset($attributes['uid']));
       foreach ($this->stanfordConfig->get('role_mapping.mapping') as $role_mapping) {
         if (in_array($role_mapping['value'], $workgroups)) {
           $account->addRole($role_mapping['role']);
@@ -178,7 +178,7 @@ class StanfordSamlAuthSubscriber implements EventSubscriberInterface {
     }
 
     // Simple sunetID check.
-    if (in_array($account->getAccountName(), $this->stanfordConfig->get('allowed.users'))) {
+    if (in_array(reset($attributes['uid']), $this->stanfordConfig->get('allowed.users'))) {
       return TRUE;
     }
 
@@ -204,7 +204,7 @@ class StanfordSamlAuthSubscriber implements EventSubscriberInterface {
 
     // Use the workgroup API to check if the user exists in any of the allowed
     // workgroups.
-    return $this->workgroupApi->userInAnyGroup($allowed_groups, $account->getAccountName());
+    return $this->workgroupApi->userInAnyGroup($allowed_groups, reset($attributes['uid']));
   }
 
   /**

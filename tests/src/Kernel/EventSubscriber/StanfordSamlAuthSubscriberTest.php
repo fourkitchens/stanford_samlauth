@@ -33,6 +33,7 @@ class StanfordSamlAuthSubscriberTest extends StanfordSamlAuthTestBase {
 
     $account = User::create(['name' => 'bob', 'mail' => 'bob@example.com']);
     $attributes = [
+      'uid' => ['bob'],
       'eduPersonAffiliation' => ['staff', 'member'],
       'fakeAttribute' => 'foobar',
     ];
@@ -58,7 +59,10 @@ class StanfordSamlAuthSubscriberTest extends StanfordSamlAuthTestBase {
       ->set('allowed', $restrictions)
       ->save();
 
-    $attributes = ['eduPersonAffiliation' => ['staff', 'member']];
+    $attributes = [
+      'uid' => ['foobar'],
+      'eduPersonAffiliation' => ['staff', 'member'],
+    ];
     $account = User::create([
       'name' => 'foobar',
       'mail' => 'foobar@example.com',
@@ -69,6 +73,7 @@ class StanfordSamlAuthSubscriberTest extends StanfordSamlAuthTestBase {
       ->dispatch($event, SamlauthEvents::USER_SYNC);
     $this->assertFalse($account->isBlocked());
 
+    $attributes['uid'] = ['bob'];
     $account = User::create([
       'name' => 'bob',
       'mail' => 'bob@example.com',
@@ -98,7 +103,10 @@ class StanfordSamlAuthSubscriberTest extends StanfordSamlAuthTestBase {
       'mail' => 'foobar@example.com',
       'status' => 1,
     ]);
-    $attributes = ['eduPersonAffiliation' => ['staff', 'faculty']];
+    $attributes = [
+      'uid' => ['foobar'],
+      'eduPersonAffiliation' => ['staff', 'faculty'],
+    ];
     $event = new SamlauthUserSyncEvent($account, $attributes, FALSE);
     \Drupal::service('event_dispatcher')
       ->dispatch($event, SamlauthEvents::USER_SYNC);
@@ -109,7 +117,10 @@ class StanfordSamlAuthSubscriberTest extends StanfordSamlAuthTestBase {
       'mail' => 'bob@example.com',
       'status' => 1,
     ]);
-    $attributes = ['eduPersonAffiliation' => ['staff', 'member']];
+    $attributes = [
+      'uid' => ['bob'],
+      'eduPersonAffiliation' => ['staff', 'member'],
+    ];
     $event = new SamlauthUserSyncEvent($account, $attributes, FALSE);
     $this->expectException(UserVisibleException::class);
     \Drupal::service('event_dispatcher')
@@ -134,7 +145,7 @@ class StanfordSamlAuthSubscriberTest extends StanfordSamlAuthTestBase {
       'mail' => 'foobar@example.com',
       'status' => 1,
     ]);
-    $attributes = ['eduPersonEntitlement' => ['foobar']];
+    $attributes = ['uid' => ['foobar'], 'eduPersonEntitlement' => ['foobar']];
     $event = new SamlauthUserSyncEvent($account, $attributes, FALSE);
     $this->expectException(UserVisibleException::class);
     \Drupal::service('event_dispatcher')
@@ -146,7 +157,7 @@ class StanfordSamlAuthSubscriberTest extends StanfordSamlAuthTestBase {
       'mail' => 'bob@example.com',
       'status' => 1,
     ]);
-    $attributes = ['eduPersonEntitlement' => ['member']];
+    $attributes = ['uid' => ['bob'], 'eduPersonEntitlement' => ['member']];
     $event = new SamlauthUserSyncEvent($account, $attributes, FALSE);
     $this->expectException(UserVisibleException::class);
     \Drupal::service('event_dispatcher')
