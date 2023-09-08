@@ -32,7 +32,7 @@ class StanfordSspCommandsTest extends StanfordSamlAuthTestBase {
   /**
    * {@inheritDoc}
    */
-  protected function setUp(): void {
+  public function setup(): void {
     parent::setup();
 
     $authmap = \Drupal::service('externalauth.authmap');

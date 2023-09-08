@@ -8,6 +8,7 @@ use Drupal\stanford_samlauth\Service\WorkgroupApi;
 use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Stream;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\RequestInterface;
 
@@ -43,7 +44,7 @@ class WorkgroupApiTest extends UnitTestCase {
   /**
    * {@inheritDoc}
    */
-  protected function setUp(): void {
+  public function setup(): void {
     parent::setUp();
 
     $this->authname = $this->randomMachineName();
@@ -100,7 +101,13 @@ class WorkgroupApiTest extends UnitTestCase {
       case 'bar:foo':
         throw new ClientException('It broke', $request, $guzzle_response);
     }
-    $guzzle_response->method('getBody')->willReturn(json_encode($body));
+
+    $resource = fopen('php://memory','r+');
+    fwrite($resource, json_encode($body));
+    rewind($resource);
+    $body = new Stream($resource);
+
+    $guzzle_response->method('getBody')->willReturn($body);
     return $guzzle_response;
   }
 

@@ -29,7 +29,7 @@ class SamlLoginBlockTest extends UnitTestCase {
   /**
    * {@inheritDoc}
    */
-  protected function setUp(): void {
+  public function setup(): void {
     parent::setUp();
 
     $url_generator = $this->createMock(UrlGeneratorInterface::class);
