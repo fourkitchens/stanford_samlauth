@@ -69,7 +69,8 @@ function stanford_samlauth_install() {
 
       // Convert the simplesamlphp role mapping to a structured array.
       $role_mappings = [];
-      foreach (explode('|', $saml_config->get('role.population')) as $mapping) {
+      $simplesaml_role_mapping = array_filter(explode('|', $saml_config->get('role.population')));
+      foreach ($simplesaml_role_mapping as $mapping) {
         [$role, $condition] = explode(':', $mapping, 2);
         [$attribute, , $value] = explode(',', $condition, 3);
         $role_mappings[] = [
