@@ -1,5 +1,12 @@
 # Stanford SamlAuth
 
+1.0.3
+--------------------------------------------------------------------------------
+_Release Date: 2023-09-28_
+
+- Handle basic sunets without a mail attribute.
+- Fixed empty role population during install.
+
 1.0.2
 --------------------------------------------------------------------------------
 _Release Date: 2023-08-08_
