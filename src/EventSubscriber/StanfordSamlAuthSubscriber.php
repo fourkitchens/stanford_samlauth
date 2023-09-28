@@ -43,7 +43,7 @@ class StanfordSamlAuthSubscriber implements EventSubscriberInterface {
    */
   public static function getSubscribedEvents() {
     return [
-      SamlauthEvents::USER_SYNC => 'onSamlUserSync',
+      SamlauthEvents::USER_SYNC => ['onSamlUserSync', 10],
       KernelEvents::REQUEST => 'onKernelRequest',
     ];
   }
@@ -77,6 +77,15 @@ class StanfordSamlAuthSubscriber implements EventSubscriberInterface {
    */
   public function onSamlUserSync(SamlauthUserSyncEvent $event) {
     $account = $event->getAccount();
+
+    // Basic sunets don't have a mail attribute, so we create one to prevent
+    // errors when the user logs in.
+    $attributes = $event->getAttributes();
+    if (empty($attributes['mail'][0])) {
+      $attributes['mail'] = [reset($attributes['uid']) . '@stanford.edu'];
+    }
+    $event->setAttributes($attributes);
+
     $account->set('affiliation', $event->getAttributes()['eduPersonAffiliation'] ?? []);
 
     // Make sure the user is authorized first.
