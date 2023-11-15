@@ -12,6 +12,9 @@ Installation
 ---
 
 Place the Saml cert and key on the server in a protected location. They should be kept secret.
+
+See the [SAML Authentication README](https://git.drupalcode.org/project/samlauth/-/blob/8.x-3.x/README.md) for creating the certificate and key, and [the Stanford UIT Guide to Single SignOn](https://uit.stanford.edu/service/saml/onboard-service-provider) for downloading the signing certificate to sign the assertion.
+
 Add the following to the settings.php file indicating the path to the cert files:
 ```php
 $config['samlauth.authentication']['sp_x509_certificate'] = 'file:/path/to/cert.crt';
