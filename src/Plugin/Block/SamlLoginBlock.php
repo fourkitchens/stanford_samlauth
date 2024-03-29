@@ -55,7 +55,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    */
   public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RequestStack $requestStack) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->currentUri = $requestStack->getCurrentRequest()?->getRequestUri();
+    $this->currentUri = $requestStack->getCurrentRequest()?->getPathInfo();
   }
 
   /**
