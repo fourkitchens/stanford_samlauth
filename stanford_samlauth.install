@@ -5,6 +5,7 @@
  * Migrate data from stanford_ssp module.
  */
 
+use Drupal\user\Entity\Role;
 use Drupal\user\RoleInterface;
 
 /**
@@ -33,9 +34,9 @@ function stanford_samlauth_install() {
     return;
   }
 
-  $roles = user_roles(TRUE);
-  unset($roles[RoleInterface::AUTHENTICATED_ID]);
-  $role_ids = array_combine(array_keys($roles), array_keys($roles));
+  $role_ids = array_keys(Role::loadMultiple());
+  $role_ids = array_combine($role_ids, $role_ids);
+  unset($role_ids[RoleInterface::AUTHENTICATED_ID]);
 
   // Set the SamlAuth settings.
   $samlauth_config

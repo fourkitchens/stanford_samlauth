@@ -38,7 +38,9 @@ class StanfordSspCommandsTest extends StanfordSamlAuthTestBase {
     $authmap = \Drupal::service('externalauth.authmap');
     $form_builder = \Drupal::formBuilder();
     $config_factory = \Drupal::configFactory();
-    $this->commandObject = new StanfordSamlAuthCommands($authmap, $form_builder, $config_factory);
+    $entity_type_manager = \Drupal::entityTypeManager();
+
+    $this->commandObject = new StanfordSamlAuthCommands($authmap, $form_builder, $config_factory, $entity_type_manager);
     $this->commandObject->setLogger(\Drupal::logger('stanford_samlauth'));
     $this->commandObject->setOutput($this->createMock(OutputInterface::class));
 

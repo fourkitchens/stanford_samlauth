@@ -172,7 +172,7 @@ class StanfordSamlAuthSubscriberTest extends StanfordSamlAuthTestBase {
 
     $kernel = $this->container->get('kernel');
     $request = Request::create('/admin/people/create');
-    $event = new RequestEvent($kernel, $request, HttpKernelInterface::MASTER_REQUEST);
+    $event = new RequestEvent($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
     \Drupal::service('event_dispatcher')
       ->dispatch($event, KernelEvents::REQUEST);
 

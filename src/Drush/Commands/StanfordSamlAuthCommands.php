@@ -4,30 +4,18 @@ namespace Drupal\stanford_samlauth\Drush\Commands;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Form\FormState;
 use Drupal\externalauth\AuthmapInterface;
 use Drupal\stanford_samlauth\Form\SamlAuthCreateUserForm;
+use Drupal\user\RoleInterface;
 use Drush\Commands\DrushCommands;
 
 /**
  * A Drush commandfile.
  */
 class StanfordSamlAuthCommands extends DrushCommands {
-
-  /**
-   * External authmap service.
-   *
-   * @var \Drupal\externalauth\AuthmapInterface
-   */
-  protected $authmap;
-
-  /**
-   * Form builder service.
-   *
-   * @var \Drupal\Core\Form\FormBuilderInterface
-   */
-  protected $formBuilder;
 
   /**
    * Config object of SAML settings.
@@ -46,16 +34,16 @@ class StanfordSamlAuthCommands extends DrushCommands {
   /**
    * StanfordSspCommands constructor.
    *
-   * @param \Drupal\externalauth\AuthmapInterface $auth_map
+   * @param \Drupal\externalauth\AuthmapInterface $authMap
    *   Authmap service.
-   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   * @param \Drupal\Core\Form\FormBuilderInterface $formBuilder
    *   Form builder service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   Config factory service.
+   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
+   *   Entity type manager service.
    */
-  public function __construct(AuthmapInterface $auth_map, FormBuilderInterface $form_builder, ConfigFactoryInterface $config_factory) {
-    $this->authmap = $auth_map;
-    $this->formBuilder = $form_builder;
+  public function __construct(protected AuthmapInterface $authMap, protected FormBuilderInterface $formBuilder, ConfigFactoryInterface $config_factory, protected EntityTypeManagerInterface $entityTypeManager) {
     $this->samlConfig = $config_factory->getEditable('samlauth.authentication');
     $this->stanfordConfig = $config_factory->getEditable('stanford_samlauth.settings');
   }
@@ -73,10 +61,9 @@ class StanfordSamlAuthCommands extends DrushCommands {
    */
   public function entitlementRole(string $entitlement, string $role_id) {
     $role_id = Html::escape($role_id);
-    $existing_roles = user_roles(TRUE);
-
+    $role = $this->entityTypeManager->getStorage('user_role')->load($role_id);
     // Validate the role exists.
-    if (!isset($existing_roles[$role_id])) {
+    if (!$role) {
       $this->logger->error(dt('No role exists with the ID "%role_id".', ['%role_id' => $role_id]));
       return;
     }
@@ -133,8 +120,10 @@ class StanfordSamlAuthCommands extends DrushCommands {
 
     // Build the roles array and make sure to only add the ones that exist.
     $options['roles'] = array_filter(explode(',', $options['roles'] ?: ''));
-    $existing_roles = array_keys(user_roles(TRUE));
-    $options['roles'] = array_intersect($existing_roles, $options['roles']);
+    $existing_roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
+    unset($existing_roles[RoleInterface::AUTHENTICATED_ID], $existing_roles[RoleInterface::ANONYMOUS_ID]);
+
+    $options['roles'] = array_intersect(array_keys($existing_roles), $options['roles']);
     $options['sunetid'] = $sunetid;
 
     $options = array_filter($options);

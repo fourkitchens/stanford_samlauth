@@ -84,14 +84,13 @@ class RoleMappingSettingsForm extends ConfigFormBase {
       '#header' => $this->getRoleHeaders(),
       '#attributes' => ['id' => 'role-mapping-table'],
     ];
-
+    $roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
+    unset($roles[RoleInterface::AUTHENTICATED_ID], $roles[RoleInterface::ANONYMOUS_ID]);
     $form['user_info']['role_mapping']['add']['role'] = [
       '#type' => 'select',
       '#title' => $this->t('Add Role'),
-      '#options' => user_role_names(TRUE),
+      '#options' => array_map(fn(RoleInterface $role) => $role->label(), $roles),
     ];
-    unset($form['user_info']['role_mapping']['add']['role']['#options'][RoleInterface::AUTHENTICATED_ID]);
-    unset($form['user_info']['role_mapping']['add']['role']['#options'][RoleInterface::ANONYMOUS_ID]);
 
     $form['user_info']['role_mapping']['add']['attribute'] = [
       '#type' => 'textfield',

@@ -8,7 +8,9 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Password\PasswordGeneratorInterface;
 use Drupal\externalauth\AuthmapInterface;
+use Drupal\user\Entity\Role;
 use Drupal\user\Entity\User;
+use Drupal\user\RoleInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -123,7 +125,9 @@ class SamlAuthCreateUserForm extends FormBase {
       $role_delegation = \Drupal::service('delegatable_roles');
       return $role_delegation->getAssignableRoles(\Drupal::currentUser());
     }
-    return user_role_names(TRUE);
+    $roles = Role::loadMultiple();
+    unset($roles[RoleInterface::AUTHENTICATED_ID], $roles[RoleInterface::ANONYMOUS_ID]);
+    return array_map(fn(RoleInterface $role) => $role->label(), $roles);
   }
 
   /**
