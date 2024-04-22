@@ -117,7 +117,7 @@ function stanford_samlauth_install() {
 /**
  * Add request timeout config value.
  */
-function stanford_samlauth_update_1001() {
+function stanford_samlauth_update_8001() {
   \Drupal::configFactory()
     ->getEditable('stanford_samlauth.settings')
     ->set('role_mapping.workgroup_api.timeout', 30)
