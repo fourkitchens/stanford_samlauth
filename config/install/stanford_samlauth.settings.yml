@@ -11,4 +11,5 @@ role_mapping:
   workgroup_api:
     cert: ''
     key: ''
+    timeout: 30
   mapping: {}

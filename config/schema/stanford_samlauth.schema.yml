@@ -64,6 +64,9 @@ stanford_samlauth.settings:
             key:
               type: string
               label: Path to Workgroup API Key file
+            timeout:
+              type: integer
+              label: API Request timeout limit
         reevaluate:
           type: string
           label: Reevaluation rule

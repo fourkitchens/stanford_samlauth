@@ -159,11 +159,12 @@ class WorkgroupApi implements WorkgroupApiInterface {
    *   API response or false if fails.
    */
   protected function callApi(string $workgroup = NULL, string $sunet = NULL): ?array {
+    $config = $this->configFactory->get('stanford_samlauth.settings');
     $options = [
       'cert' => $this->getCert(),
       'ssl_key' => $this->getKey(),
       'verify' => TRUE,
-      'timeout' => 5,
+      'timeout' => $config->get('role_mapping.workgroup_api.timeout') ?: 30,
       'query' => [
         'type' => $workgroup ? 'workgroup' : 'user',
         'id' => $workgroup ?: $sunet,

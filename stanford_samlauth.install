@@ -113,3 +113,13 @@ function stanford_samlauth_install() {
     ->set('match_noredirect_pages', "/jsonapi\r\n/jsonapi/*\r\n/subrequests")
     ->save();
 }
+
+/**
+ * Add request timeout config value.
+ */
+function stanford_samlauth_update_1001() {
+  \Drupal::configFactory()
+    ->getEditable('stanford_samlauth.settings')
+    ->set('role_mapping.workgroup_api.timeout', 30)
+    ->save();
+}
