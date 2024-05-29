@@ -1,8 +1,14 @@
 # Stanford SamlAuth
 
+1.0.9
+--------------------------------------------------------------------------------
+_Release Date: 2024-05-29_
+
+- Store workgroup api responses during the login to avoid unneeded requests.
+
 1.0.8
 --------------------------------------------------------------------------------
-_Release Date: 2024-05*28_
+_Release Date: 2024-05-28_
 
 - Adjusted Dependency versions
 
