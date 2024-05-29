@@ -12,24 +12,23 @@ use GuzzleHttp\Exception\GuzzleException;
  * Workgroup api service class to connect to the API.
  *
  * @package Drupal\stanford_samlauth\Service
+ *
+ * @phpstan-type WorkgroupInfo array{
+ *   lastUpdated: string,
+ *   description: string,
+ *   lastUpdatedBy: string,
+ *   name: string,
+ *   memberCount: string,
+ * }
+ * @phpstan-type WorkgroupAPIResponse array{
+ *   id: string,
+ *   type: string,
+ *   result: array<string, WorkgroupInfo>
+ * }
  */
 class WorkgroupApi implements WorkgroupApiInterface {
 
   const WORKGROUP_API = 'https://workgroupsvc.stanford.edu/workgroups/2.0';
-
-  /**
-   * Config factory service.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * Guzzle client service.
-   *
-   * @var \GuzzleHttp\ClientInterface
-   */
-  protected $guzzle;
 
   /**
    * Logger channel service.
@@ -53,18 +52,26 @@ class WorkgroupApi implements WorkgroupApiInterface {
   protected $key;
 
   /**
+   * Keyed array of api responses, keyed by the type and the id of the request.
+   *
+   * @var array{
+   *   workgroup?: array<string, WorkgroupAPIResponse>,
+   *   user?: array<string, WorkgroupAPIResponse>
+   * }
+   */
+  protected $responses = [];
+
+  /**
    * StanfordSSPWorkgroupApi constructor.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
    *   Config factory service.
    * @param \GuzzleHttp\ClientInterface $guzzle
    *   Http client guzzle service.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger
    *   Logger channel factory service.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ClientInterface $guzzle, LoggerChannelFactoryInterface $logger) {
-    $this->configFactory = $config_factory;
-    $this->guzzle = $guzzle;
+  public function __construct(protected ConfigFactoryInterface $configFactory, protected ClientInterface $guzzle, LoggerChannelFactoryInterface $logger) {
     $this->logger = $logger->get('stanford_samlauth');
 
     $config = $this->configFactory->get('stanford_samlauth.settings');
@@ -155,10 +162,16 @@ class WorkgroupApi implements WorkgroupApiInterface {
    * @param string|null $sunet
    *   User sunetid.
    *
-   * @return null|array
+   * @return null|array<WorkgroupAPIResponse>
    *   API response or false if fails.
    */
   protected function callApi(string $workgroup = NULL, string $sunet = NULL): ?array {
+    $type = $workgroup ? 'workgroup' : 'user';
+    $id = $workgroup ?: $sunet;
+    if (isset($this->responses[$type][$id])) {
+      return $this->responses[$type][$id];
+    }
+
     $config = $this->configFactory->get('stanford_samlauth.settings');
     $options = [
       'cert' => $this->getCert(),
@@ -166,14 +179,16 @@ class WorkgroupApi implements WorkgroupApiInterface {
       'verify' => TRUE,
       'timeout' => $config->get('role_mapping.workgroup_api.timeout') ?: 30,
       'query' => [
-        'type' => $workgroup ? 'workgroup' : 'user',
-        'id' => $workgroup ?: $sunet,
+        'type' => $type,
+        'id' => $id,
       ],
     ];
     $api_url = Settings::get('stanford_samlauth.workgroup_api', self::WORKGROUP_API);
     try {
       $result = $this->guzzle->request('GET', $api_url, $options);
-      return json_decode($result->getBody(), TRUE);
+      $result = json_decode($result->getBody(), TRUE, 512, JSON_THROW_ON_ERROR);
+      $this->responses[$type][$id] = $result;
+      return $result;
     }
     catch (GuzzleException $e) {
       $this->logger->error('Unable to connect to workgroup api. @message', ['@message' => $e->getMessage()]);
