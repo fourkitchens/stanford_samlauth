@@ -10,11 +10,15 @@ use Drupal\Core\Form\FormState;
 use Drupal\externalauth\AuthmapInterface;
 use Drupal\stanford_samlauth\Form\SamlAuthCreateUserForm;
 use Drupal\user\RoleInterface;
+use Drush\Boot\DrupalBootLevels;
 use Drush\Commands\DrushCommands;
+use Drush\Attributes as CLI;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * A Drush commandfile.
+ * Samlauth drush comamnds.
  */
+#[CLI\Bootstrap(DrupalBootLevels::FULL)]
 class StanfordSamlAuthCommands extends DrushCommands {
 
   /**
@@ -32,7 +36,24 @@ class StanfordSamlAuthCommands extends DrushCommands {
   protected $stanfordConfig;
 
   /**
-   * StanfordSspCommands constructor.
+   * Instantiates a new instance of the implementing class using autowiring.
+   *
+   * @param \Symfony\Component\DependencyInjection\ContainerInterface $container
+   *   The service container this instance should use.
+   *
+   * @return static
+   */
+  public static function create(ContainerInterface $container) {
+    return new static(
+      $container->get('externalauth.authmap'),
+      $container->get('form_builder'),
+      $container->get('config.factory'),
+      $container->get('entity_type.manager')
+    );
+  }
+
+  /**
+   * Drush command constructor.
    *
    * @param \Drupal\externalauth\AuthmapInterface $authMap
    *   Authmap service.
@@ -43,22 +64,22 @@ class StanfordSamlAuthCommands extends DrushCommands {
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entityTypeManager
    *   Entity type manager service.
    */
-  public function __construct(protected AuthmapInterface $authMap, protected FormBuilderInterface $formBuilder, ConfigFactoryInterface $config_factory, protected EntityTypeManagerInterface $entityTypeManager) {
+  public function __construct(protected readonly AuthmapInterface $authMap, protected readonly FormBuilderInterface $formBuilder, ConfigFactoryInterface $config_factory, protected readonly EntityTypeManagerInterface $entityTypeManager) {
+    parent::__construct();
     $this->samlConfig = $config_factory->getEditable('samlauth.authentication');
     $this->stanfordConfig = $config_factory->getEditable('stanford_samlauth.settings');
   }
 
   /**
    * Map a SAML entitlement to a role.
-   *
-   * @param string $entitlement
-   *   A value from eduPersonEntitlement, e.g., "anchorage_support".
-   * @param string $role_id
-   *   The name of the role, e.g., "stanford_staff".
-   *
-   * @command saml:entitlement-role
-   * @aliases saml-ser,saml-entitlement-role
    */
+  #[CLI\Command(name: 'saml:entitlement-role', aliases: [
+    'saml-ser',
+    'saml-entitlement-role',
+  ])]
+  #[CLI\Argument(name: 'entitlement', description: 'A value from eduPersonEntitlement Saml Assertion.')]
+  #[CLI\Argument(name: 'role_id', description: 'Role machine name.')]
+  #[CLI\Usage(name: 'saml:entitlement-role anchorage_support site_editor', description: 'Map the users with "anchorage_support" entitlement to the site_editor role.')]
   public function entitlementRole(string $entitlement, string $role_id) {
     $role_id = Html::escape($role_id);
     $role = $this->entityTypeManager->getStorage('user_role')->load($role_id);
@@ -87,24 +108,13 @@ class StanfordSamlAuthCommands extends DrushCommands {
 
   /**
    * Add a SSO enabled user.
-   *
-   * @param string $sunetid
-   *   A sunet id.
-   * @param array $options
-   *   An associative array of options.
-   *
-   * @option name
-   *   The user's name.
-   * @option email
-   *   The user's email.
-   * @option roles
-   *   Comma separated list of role names.
-   * @option send-email
-   *   Send email to the user?
-   *
-   * @command saml:add-user
-   * @aliases saml-au,saml-add-user
    */
+  #[CLI\Command(name: 'saml:add-user', aliases: ['saml-au', 'saml-add-user'])]
+  #[CLI\Argument(name: 'sunetid', description: 'A sunet id.')]
+  #[CLI\Option(name: 'name', description: 'The user\'s name.')]
+  #[CLI\Option(name: 'email', description: 'The user\'s email.')]
+  #[CLI\Option(name: 'roles', description: 'Comma separated list of role names.')]
+  #[CLI\Option(name: 'send-email', description: 'Send email to the user?')]
   public function addUser(string $sunetid, array $options = [
     'name' => NULL,
     'email' => NULL,
@@ -120,7 +130,8 @@ class StanfordSamlAuthCommands extends DrushCommands {
 
     // Build the roles array and make sure to only add the ones that exist.
     $options['roles'] = array_filter(explode(',', $options['roles'] ?: ''));
-    $existing_roles = $this->entityTypeManager->getStorage('user_role')->loadMultiple();
+    $existing_roles = $this->entityTypeManager->getStorage('user_role')
+      ->loadMultiple();
     unset($existing_roles[RoleInterface::AUTHENTICATED_ID], $existing_roles[RoleInterface::ANONYMOUS_ID]);
 
     $options['roles'] = array_intersect(array_keys($existing_roles), $options['roles']);
