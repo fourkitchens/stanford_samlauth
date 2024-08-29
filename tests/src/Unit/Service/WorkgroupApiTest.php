@@ -64,7 +64,7 @@ class WorkgroupApiTest extends UnitTestCase {
     $guzzle = $this->createMock(ClientInterface::class);
     $guzzle->method('request')
       ->withAnyParameters()
-      ->will($this->returnCallback([$this, 'guzzleRequestCallback']));
+      ->willReturnCallback([$this, 'guzzleRequestCallback']);
 
     $logger = $this->createMock(LoggerChannelFactoryInterface::class);
     $logger->method('get')
