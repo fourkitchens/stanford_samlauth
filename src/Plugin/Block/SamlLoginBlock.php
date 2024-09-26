@@ -2,7 +2,6 @@
 
 namespace Drupal\stanford_samlauth\Plugin\Block;
 
-use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
@@ -13,7 +12,7 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Provides a 'Saml Login Block' block.
+ * Provides a 'Saml Login/Logout Block' block.
  *
  * @Block(
  *  id = "stanford_samlauth_login_block",
@@ -30,6 +29,13 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
   protected $currentUri;
 
   /**
+   * Current user.
+   *
+   * @var Drupal\Core\Session\AccountInterface
+   */
+  protected $currentUser;
+
+  /**
    * {@inheritDoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
@@ -37,7 +43,8 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('request_stack')
+      $container->get('request_stack'),
+      $container->get('current_user'),
     );
   }
 
@@ -52,17 +59,30 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    *   Plugin definition.
    * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
    *   Current request stack object.
+   * @param \Drupal\Core\Session\AccountInterface $account
+   *   The account interface.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RequestStack $requestStack) {
+  public function __construct(
+    array $configuration,
+    string $plugin_id,
+    array $plugin_definition,
+    RequestStack $requestStack,
+    AccountInterface $account
+    ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->currentUri = $requestStack->getCurrentRequest()?->getPathInfo();
+    $this->currentUser = $account;
   }
 
   /**
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return ['link_text' => 'SUNetID Login'] + parent::defaultConfiguration();
+    return [
+      'link_text' => 'SUNetID Login',
+      'logout_link_text' => 'SUNetID Logout',
+      'enable_logout_button' => 0,
+    ] + parent::defaultConfiguration();
   }
 
   /**
@@ -71,10 +91,23 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
   public function blockForm($form, FormStateInterface $form_state) {
     $form['link_text'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Text of the SUNetID link'),
+      '#title' => $this->t('SUNetID log-in link text'),
       '#description' => $this->t('Here you can replace the text of the SUNetID link.'),
       '#default_value' => $this->configuration['link_text'],
       '#required' => TRUE,
+    ];
+
+    $form['enable_logout_button'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Enable logout button'),
+      '#default_value' => $this->configuration['enable_logout_button'],
+    ];
+
+    $form['logout_link_text'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('SUNetID log-out link text'),
+      '#description' => $this->t('Add text to show a link for authenticated users.'),
+      '#default_value' => $this->configuration['logout_link_text'],
     ];
     return $form;
   }
@@ -84,17 +117,9 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    */
   public function getCacheContexts() {
     $context = parent::getCacheContexts();
-    // Make the block cache different for each page since the login link has a
-    // destination parameter.
-    return Cache::mergeContexts($context, ['url.path']);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function access(AccountInterface $account, $return_as_object = FALSE) {
-    $access = AccessResult::allowedIf($account->isAnonymous());
-    return $return_as_object ? $access : $access->isAllowed();
+    // Make the block cache different for each page and user since the login
+    // link has a destination parameter and as based on user login status.
+    return Cache::mergeContexts($context, ['url.path', 'user']);
   }
 
   /**
@@ -102,27 +127,51 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
     $this->configuration['link_text'] = $form_state->getValue('link_text');
+    $this->configuration['logout_link_text'] = $form_state->getValue('logout_link_text');
+    $this->configuration['enable_logout_button'] = $form_state->getValue('enable_logout_button');
   }
 
   /**
    * {@inheritdoc}
    */
   public function build() {
-    $url = Url::fromRoute('samlauth.saml_controller_login', ['destination' => $this->currentUri]);
     $build = [];
-    $build['login'] = [
-      '#type' => 'html_tag',
-      '#tag' => 'a',
-      '#value' => $this->configuration['link_text'],
-      '#attributes' => [
-        'rel' => 'nofollow',
-        'href' => $url->toString(),
-        'class' => [
-          'su-button',
-          'decanter-button',
+    $is_anonymous = $this->currentUser->isAnonymous();
+    if (!$is_anonymous) {
+      if ($this->configuration['enable_logout_button']) {
+        $url = Url::fromRoute('user.logout', ['destination' => $this->currentUri]);
+        $build['login'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'a',
+          '#value' => $this->configuration['logout_link_text'],
+          '#attributes' => [
+            'rel' => 'nofollow',
+            'href' => $url->toString(),
+            'class' => [
+              'su-button',
+              'decanter-button',
+            ],
+          ],
+        ];
+      }
+    }
+    else {
+      $url = Url::fromRoute('samlauth.saml_controller_login', ['destination' => $this->currentUri]);
+      $build['login'] = [
+        '#type' => 'html_tag',
+        '#tag' => 'a',
+        '#value' => $this->configuration['link_text'],
+        '#attributes' => [
+          'rel' => 'nofollow',
+          'href' => $url->toString(),
+          'class' => [
+            'su-button',
+            'decanter-button',
+          ],
         ],
-      ],
-    ];
+      ];
+    }
+
     return $build;
   }
 
