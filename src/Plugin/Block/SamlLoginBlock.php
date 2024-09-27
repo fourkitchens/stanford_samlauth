@@ -108,6 +108,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
       '#title' => $this->t('SUNetID log-out link text'),
       '#description' => $this->t('Add text to show a link for authenticated users.'),
       '#default_value' => $this->configuration['logout_link_text'],
+      '#required' => TRUE,
     ];
     return $form;
   }
