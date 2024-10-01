@@ -80,8 +80,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
   public function defaultConfiguration() {
     return [
       'link_text' => 'SUNetID Login',
-      'logout_link_text' => 'SUNetID Logout',
-      'enable_logout_button' => 0,
+      'logout_link_text' => '',
     ] + parent::defaultConfiguration();
   }
 
@@ -97,18 +96,11 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
       '#required' => TRUE,
     ];
 
-    $form['enable_logout_button'] = [
-      '#type' => 'checkbox',
-      '#title' => $this->t('Enable logout button'),
-      '#default_value' => $this->configuration['enable_logout_button'],
-    ];
-
     $form['logout_link_text'] = [
       '#type' => 'textfield',
       '#title' => $this->t('SUNetID log-out link text'),
-      '#description' => $this->t('Add text to show a link for authenticated users.'),
+      '#description' => $this->t('Add text to show a link for authenticated users. Leave blank to hide the link.'),
       '#default_value' => $this->configuration['logout_link_text'],
-      '#required' => TRUE,
     ];
     return $form;
   }
@@ -128,8 +120,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    */
   public function blockSubmit($form, FormStateInterface $form_state) {
     $this->configuration['link_text'] = $form_state->getValue('link_text');
-    $this->configuration['logout_link_text'] = $form_state->getValue('logout_link_text');
-    $this->configuration['enable_logout_button'] = $form_state->getValue('enable_logout_button');
+    $this->configuration['logout_link_text'] = trim($form_state->getValue('logout_link_text'));
   }
 
   /**
@@ -138,30 +129,21 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
   public function build() {
     $build = [];
     $is_anonymous = $this->currentUser->isAnonymous();
-    if (!$is_anonymous) {
-      if ($this->configuration['enable_logout_button']) {
-        $url = Url::fromRoute('user.logout', ['destination' => $this->currentUri]);
-        $build['login'] = [
-          '#type' => 'html_tag',
-          '#tag' => 'a',
-          '#value' => $this->configuration['logout_link_text'],
-          '#attributes' => [
-            'rel' => 'nofollow',
-            'href' => $url->toString(),
-            'class' => [
-              'su-button',
-              'decanter-button',
-            ],
-          ],
-        ];
-      }
+    $logout_link = $this->configuration['logout_link_text'];
+    if (!$is_anonymous && $logout_link) {
+      $url = Url::fromRoute('user.logout', ['destination' => $this->currentUri]);
+      $link_text = $logout_link;
     }
     else {
       $url = Url::fromRoute('samlauth.saml_controller_login', ['destination' => $this->currentUri]);
+      $link_text = $this->configuration['link_text'];
+    }
+
+    if ($is_anonymous || $logout_link) {
       $build['login'] = [
         '#type' => 'html_tag',
         '#tag' => 'a',
-        '#value' => $this->configuration['link_text'],
+        '#value' => $link_text,
         '#attributes' => [
           'rel' => 'nofollow',
           'href' => $url->toString(),
