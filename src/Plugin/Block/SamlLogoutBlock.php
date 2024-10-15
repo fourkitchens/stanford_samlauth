@@ -13,14 +13,14 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
- * Provides a 'Saml Login Block' block.
+ * Provides a 'Saml Logout Block' block.
  *
  * @Block(
- *  id = "stanford_samlauth_login_block",
- *  admin_label = @Translation("SAML SUNetID Login Block")
+ *  id = "stanford_samlauth_logout_block",
+ *  admin_label = @Translation("SAML SUNetID Logout Block")
  * )
  */
-class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterface {
+class SamlLogoutBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
    * Current uri the block is displayed on.
@@ -62,7 +62,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * {@inheritdoc}
    */
   public function defaultConfiguration() {
-    return ['link_text' => 'SUNetID Login'] + parent::defaultConfiguration();
+    return ['link_text' => 'SUNetID Logout'] + parent::defaultConfiguration();
   }
 
   /**
@@ -71,8 +71,8 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
   public function blockForm($form, FormStateInterface $form_state) {
     $form['link_text'] = [
       '#type' => 'textfield',
-      '#title' => $this->t('Text of the SUNetID link'),
-      '#description' => $this->t('Here you can replace the text of the SUNetID link.'),
+      '#title' => $this->t('SUNetID log-out link text'),
+      '#description' => $this->t('Add text to show a link for authenticated users.'),
       '#default_value' => $this->configuration['link_text'],
       '#required' => TRUE,
     ];
@@ -93,7 +93,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * {@inheritdoc}
    */
   public function access(AccountInterface $account, $return_as_object = FALSE) {
-    $access = AccessResult::allowedIf($account->isAnonymous());
+    $access = AccessResult::allowedIf($account->isAuthenticated());
     return $return_as_object ? $access : $access->isAllowed();
   }
 
@@ -108,9 +108,9 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * {@inheritdoc}
    */
   public function build() {
-    $url = Url::fromRoute('samlauth.saml_controller_login', ['destination' => $this->currentUri]);
+    $url = Url::fromRoute('user.logout', ['destination' => $this->currentUri]);
     $build = [];
-    $build['login'] = [
+    $build['logout'] = [
       '#type' => 'html_tag',
       '#tag' => 'a',
       '#value' => $this->configuration['link_text'],
