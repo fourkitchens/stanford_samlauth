@@ -30,7 +30,7 @@ class SamlLogoutBlock extends BlockBase implements ContainerFactoryPluginInterfa
   protected $currentUri;
 
   /**
-   * {@inheritDoc}
+   * {@inheritdoc}
    */
   public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
     return new static(
@@ -55,7 +55,7 @@ class SamlLogoutBlock extends BlockBase implements ContainerFactoryPluginInterfa
    */
   public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RequestStack $requestStack) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->currentUri = $requestStack->getCurrentRequest()?->getPathInfo();
+    $this->currentUri = $requestStack->getCurrentRequest() ?->getPathInfo();
   }
 
   /**
@@ -80,7 +80,7 @@ class SamlLogoutBlock extends BlockBase implements ContainerFactoryPluginInterfa
   }
 
   /**
-   * {@inheritDoc}
+   * {@inheritdoc}
    */
   public function getCacheContexts() {
     $context = parent::getCacheContexts();
