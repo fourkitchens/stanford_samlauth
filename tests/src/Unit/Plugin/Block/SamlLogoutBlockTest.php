@@ -15,7 +15,7 @@ use Symfony\Component\HttpFoundation\RequestStack;
  * Class SamlLogoutBlockTest
  *
  * @package Drupal\Tests\stanford_samlauth\Unit\Plugin\Block
- * @covers \Drupal\stanford_samlauth\Plugin\Block\SamlLoginBlock
+ * @covers \Drupal\stanford_samlauth\Plugin\Block\SamlLogoutBlock
  */
 class SamlLogoutBlockTest extends UnitTestCase {
 
