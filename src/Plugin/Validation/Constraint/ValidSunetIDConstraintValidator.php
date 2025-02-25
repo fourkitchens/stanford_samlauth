@@ -31,7 +31,7 @@ final class ValidSunetIDConstraintValidator extends ConstraintValidator implemen
    * {@inheritdoc}
    */
   public function validate(mixed $item, Constraint $constraint): void {
-    if ($this->workgroupApi->connectionSuccessful() && !$this->workgroupApi->isSunetValid($item)) {
+    if ($item && $this->workgroupApi->connectionSuccessful() && !$this->workgroupApi->isSunetValid($item)) {
       $this->context->addViolation($constraint->message);
     }
   }
