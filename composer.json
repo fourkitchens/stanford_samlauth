@@ -12,12 +12,25 @@
     "require": {
         "php": ">=8.1",
         "drupal/autologout": "^1 || ^2",
-        "drupal/core": "^10 || ^11",
+        "drupal/core": "^10.3 || ^11",
         "drupal/r4032login": "^2",
         "drupal/samlauth": "^3"
+    },
+    "require-dev": {
+        "drupal/field_validation": "^3.0"
     },
     "prefer-stable": true,
     "config": {
         "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "Drupal\\stanford_samlauth\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Drupal\\Tests\\stanford_samlauth\\": "tests/src"
+        }
     }
 }

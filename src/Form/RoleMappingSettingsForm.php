@@ -4,6 +4,7 @@ namespace Drupal\stanford_samlauth\Form;
 
 use Drupal\Component\Utility\Html;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\TypedConfigManagerInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -21,15 +22,16 @@ class RoleMappingSettingsForm extends ConfigFormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('entity_type.manager')
+      $container->get('entity_type.manager'),
+      $container->get('config.typed')
     );
   }
 
   /**
    * {@inheritDoc}
    */
-  public function __construct(ConfigFactoryInterface $config_factory, protected EntityTypeManagerInterface $entityTypeManager) {
-    parent::__construct($config_factory);
+  public function __construct(ConfigFactoryInterface $config_factory, protected EntityTypeManagerInterface $entityTypeManager, TypedConfigManagerInterface $typedConfigManager) {
+    parent::__construct($config_factory, $typedConfigManager);
   }
 
   /**

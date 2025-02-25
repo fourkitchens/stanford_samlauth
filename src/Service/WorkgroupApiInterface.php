@@ -5,7 +5,7 @@ namespace Drupal\stanford_samlauth\Service;
 /**
  * Interface StanfordSSPWorkgroupApiInterface.
  *
- * @package Drupal\stanford_ssp\Service
+ * @package Drupal\stanford_samlauth\Service
  */
 interface WorkgroupApiInterface {
 

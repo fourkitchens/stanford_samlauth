@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Migrate data from stanford_ssp module.
+ * Migrate data from stanford_samlauth module.
  */
 
 use Drupal\user\Entity\Role;

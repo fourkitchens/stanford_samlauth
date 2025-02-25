@@ -106,7 +106,7 @@ class SamlAuthCreateUserForm extends FormBase {
     }
 
     // Use the workgroup api to check for valid sunet.
-    /** @var \Drupal\stanford_ssp\Service\StanfordSSPWorkgroupApiInterface $workgroup_api */
+    /** @var \Drupal\stanford_samlauth\Service\WorkgroupApiInterface $workgroup_api */
     $workgroup_api = \Drupal::service('stanford_samlauth.workgroup_api');
     if ($workgroup_api->connectionSuccessful() && !$workgroup_api->isSunetValid($value)) {
       $form_state->setError($element, t('Invalid SunetID'));
@@ -186,7 +186,7 @@ class SamlAuthCreateUserForm extends FormBase {
     $this->authmap->save($new_user, 'samlauth', $form_state->getValue('sunetid'));
     $this->messenger()
       ->addStatus($this->t('Successfully created SSO account for %user', ['%user' => $new_user->getAccountName()]));
-    $this->logger('stanford_ssp')
+    $this->logger('stanford_samlauth')
       ->info('Created User %name', ['%name' => $new_user->getAccountName()]);
 
     // Was the "notify" checkbox checked?
