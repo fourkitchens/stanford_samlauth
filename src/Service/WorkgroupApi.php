@@ -184,9 +184,22 @@ class WorkgroupApi implements WorkgroupApiInterface {
       ],
     ];
     $api_url = Settings::get('stanford_samlauth.workgroup_api', self::WORKGROUP_API);
+    
+    $this->logger->info('Making workgroup API request: @url with options: @options', [
+      '@url' => $api_url,
+      '@options' => json_encode($options)
+    ]);
+    
     try {
-      $result = $this->guzzle->request('GET', $api_url, $options);
-      $result = json_decode($result->getBody(), TRUE, 512, JSON_THROW_ON_ERROR);
+      $response = $this->guzzle->request('GET', $api_url, $options);
+      $response_body = $response->getBody()->getContents();
+      
+      $this->logger->info('Workgroup API raw response (status @status): @body', [
+        '@status' => $response->getStatusCode(),
+        '@body' => $response_body
+      ]);
+      
+      $result = json_decode($response_body, TRUE, 512, JSON_THROW_ON_ERROR);
       $this->responses[$type][$id] = $result;
       return $result;
     }
@@ -202,9 +215,38 @@ class WorkgroupApi implements WorkgroupApiInterface {
   public function getAllUserWorkgroups(string $authname): array {
     $workgroup_names = [];
     if ($user_data = $this->callApi(NULL, $authname)) {
-      foreach ($user_data['results'] as $user_member) {
-        $workgroup_names[] = $user_member['name'];
+      $this->logger->info('Workgroup API response for user @authname: @data', [
+        '@authname' => $authname,
+        '@data' => json_encode($user_data)
+      ]);
+      
+      // Check for various possible keys to handle API variations
+      $results_key = null;
+      if (isset($user_data['results']) && is_array($user_data['results'])) {
+        $results_key = 'results';
+      } elseif (isset($user_data['result']) && is_array($user_data['result'])) {
+        $results_key = 'result';
+      } elseif (isset($user_data['members']) && is_array($user_data['members'])) {
+        $results_key = 'members';
       }
+      
+      if ($results_key) {
+        foreach ($user_data[$results_key] as $user_member) {
+          $workgroup_names[] = $user_member['name'];
+        }
+        $this->logger->info('Found @count workgroups for user @authname using key "@key"', [
+          '@count' => count($workgroup_names),
+          '@authname' => $authname,
+          '@key' => $results_key
+        ]);
+      } else {
+        $this->logger->warning('Workgroup API response missing expected data keys (results/result/members) for user @authname. Available keys: @keys', [
+          '@authname' => $authname,
+          '@keys' => implode(', ', array_keys($user_data))
+        ]);
+      }
+    } else {
+      $this->logger->error('Workgroup API call failed for user @authname', ['@authname' => $authname]);
     }
     return $workgroup_names;
   }
