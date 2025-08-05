@@ -9,6 +9,7 @@ use Drupal\Tests\UnitTestCase;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Psr7\Stream;
+use GuzzleHttp\Psr7\Utils;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\RequestInterface;
 
@@ -102,12 +103,8 @@ class WorkgroupApiTest extends UnitTestCase {
         throw new ClientException('It broke', $request, $guzzle_response);
     }
 
-    $resource = fopen('php://memory','r+');
-    fwrite($resource, json_encode($body));
-    rewind($resource);
-    $body = new Stream($resource);
-
-    $guzzle_response->method('getBody')->willReturn($body);
+    $guzzle_response->method('getBody')
+      ->willReturn(Utils::streamFor(json_encode($body)));
     return $guzzle_response;
   }
 
@@ -153,7 +150,7 @@ class WorkgroupApiTest extends UnitTestCase {
     $this->assertFalse($this->service->userInGroup('foo', 'bar'));
   }
 
-  public function testValidSunet(){
+  public function testValidSunet() {
     $this->assertFalse($this->service->isSunetValid('bar'));
     $this->assertTrue($this->service->isSunetValid($this->authname));
   }
