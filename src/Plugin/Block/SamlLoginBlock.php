@@ -3,23 +3,24 @@
 namespace Drupal\stanford_samlauth\Plugin\Block;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\Translatablemarkup;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides a 'Saml Login Block' block.
- *
- * @Block(
- *  id = "stanford_samlauth_login_block",
- *  admin_label = @Translation("SAML SUNetID Login Block")
- * )
  */
+#[Block(
+  id: 'stanford_samlauth_login_block',
+  admin_label: new TranslatableMarkup('SAML SUNetID Login Block')
+)]
 class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**

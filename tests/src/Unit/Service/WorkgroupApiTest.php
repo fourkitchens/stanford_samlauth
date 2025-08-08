@@ -15,9 +15,6 @@ use Psr\Http\Message\RequestInterface;
 
 /**
  * Class WorkgroupApiTest.
- *
- * @group stanford_samlauth
- * @coversDefaultClass \Drupal\stanford_samlauth\Service\WorkgroupApi
  */
 class WorkgroupApiTest extends UnitTestCase {
 

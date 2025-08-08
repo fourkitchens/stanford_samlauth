@@ -75,3 +75,19 @@ stanford_samlauth.settings:
           label: Role Mappings
           sequence:
             type: stanford_samlauth.role_map
+
+block.settings.stanford_samlauth_login_block:
+  type: block_settings
+  label: 'Saml Login Block'
+  mapping:
+    link_text:
+      type: string
+      label: Link text
+
+block.settings.stanford_samlauth_logout_block:
+  type: block_settings
+  label: 'Saml Logout Block'
+  mapping:
+    link_text:
+      type: string
+      label: Link text

@@ -10,7 +10,7 @@ use Drupal\Tests\UnitTestCase;
 use Symfony\Component\Validator\Context\ExecutionContextInterface;
 
 /**
- * @coversDefaultClass \Drupal\stanford_samlauth\Plugin\Validation\Constraint\ValidSunetIDConstraintValidator
+ * Validation test.
  */
 class ValidSunetIDConstraintValidatorTest extends UnitTestCase {
 

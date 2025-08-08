@@ -11,7 +11,7 @@ use Drupal\stanford_samlauth\Plugin\FieldValidationRule\ValidSunetIDFieldValidat
 use Drupal\Tests\UnitTestCase;
 
 /**
- * @coversDefaultClass \Drupal\stanford_samlauth\Plugin\FieldValidationRule\ValidSunetIDFieldValidationRule
+ * Field validation test.
  */
 class ValidSunetIDFieldValidationRuleTest extends UnitTestCase {
 

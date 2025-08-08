@@ -13,9 +13,6 @@ use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Class SamlLoginBlockTest
- *
- * @package Drupal\Tests\stanford_samlauth\Unit\Plugin\Block
- * @covers \Drupal\stanford_samlauth\Plugin\Block\SamlLoginBlock
  */
 class SamlLoginBlockTest extends UnitTestCase {
 

@@ -10,9 +10,6 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 /**
  * Class StanfordSspCommandsTest
- *
- * @package Drupal\Tests\stanford_samlauth\Kernel\Commands
- * @coversDefaultClass \Drupal\stanford_samlauth\Drush\Commands\StanfordSamlAuthCommands
  */
 class StanfordSamlAuthCommandsTest extends StanfordSamlAuthTestBase {
 

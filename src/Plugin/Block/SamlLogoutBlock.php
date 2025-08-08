@@ -3,23 +3,24 @@
 namespace Drupal\stanford_samlauth\Plugin\Block;
 
 use Drupal\Core\Access\AccessResult;
+use Drupal\Core\Block\Attribute\Block;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Session\AccountInterface;
+use Drupal\Core\StringTranslation\Translatablemarkup;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides a 'Saml Logout Block' block.
- *
- * @Block(
- *  id = "stanford_samlauth_logout_block",
- *  admin_label = @Translation("SAML SUNetID Logout Block")
- * )
  */
+#[Block(
+  id: 'stanford_samlauth_logout_block',
+  admin_label: new TranslatableMarkup('SAML SUNetID Logout Block')
+)]
 class SamlLogoutBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
@@ -55,7 +56,7 @@ class SamlLogoutBlock extends BlockBase implements ContainerFactoryPluginInterfa
    */
   public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RequestStack $requestStack) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->currentUri = $requestStack->getCurrentRequest() ?->getPathInfo();
+    $this->currentUri = $requestStack->getCurrentRequest()?->getPathInfo();
   }
 
   /**
