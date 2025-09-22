@@ -1,5 +1,11 @@
 # Stanford SamlAuth
 
+2.1.0
+--------------------------------------------------------------------------------
+_Release Date: 2025-09-22_
+
+- Block access to user registration and password reset routes if saml settings are appropriate.
+
 2.0.0
 --------------------------------------------------------------------------------
 _Release Date: 2025-08-08_
