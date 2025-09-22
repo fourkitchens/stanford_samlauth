@@ -8,3 +8,9 @@ services:
     arguments: [ '@stanford_samlauth.workgroup_api', '@config.factory', '@current_user', '@path.matcher', '@path.current', '@path_alias.manager' ]
     tags:
       - { name: event_subscriber }
+
+  stanford_samlauth.route_subscriber:
+    class: Drupal\stanford_samlauth\EventSubscriber\SamlAuthRouteSubscriber
+    arguments: ['@config.factory']
+    tags:
+      - { name: event_subscriber }
