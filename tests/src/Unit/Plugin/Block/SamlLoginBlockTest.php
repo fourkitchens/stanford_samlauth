@@ -5,6 +5,8 @@ namespace Drupal\Tests\stanford_samlauth\Unit\Plugin\Block;
 use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Form\FormState;
+use Drupal\Core\Path\PathMatcherInterface;
+use Drupal\Core\Routing\RedirectDestination;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\stanford_samlauth\Plugin\Block\SamlLoginBlock;
@@ -27,24 +29,52 @@ class SamlLoginBlockTest extends UnitTestCase {
   protected $block;
 
   /**
+   * The path matcher mock.
+   *
+   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Core\Path\PathMatcherInterface
+   */
+  protected $pathMatcher;
+
+  /**
+   * The URL generator mock.
+   *
+   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Core\Routing\UrlGeneratorInterface
+   */
+  protected $urlGenerator;
+
+  /**
+   * The redirect destination mock.
+   *
+   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Core\Routing\RedirectDestination
+   */
+  protected $redirectDestination;
+
+  /**
    * {@inheritDoc}
    */
   public function setup(): void {
     parent::setUp();
 
-    $url_generator = $this->createMock(UrlGeneratorInterface::class);
-    $url_generator->method('generateFromRoute')->willReturn('/foo-bar');
+    $this->urlGenerator = $this->createMock(UrlGeneratorInterface::class);
+    $this->urlGenerator->method('generateFromRoute')->willReturn('/foo-bar');
 
     $request_stack = new RequestStack();
 
     $context_manager = $this->createMock(CacheContextsManager::class);
     $context_manager->method('assertValidTokens')->willReturn(TRUE);
 
+    $this->redirectDestination = $this->createMock(RedirectDestination::class);
+    $this->redirectDestination->method('getAsArray')->willReturn(['destination' => '/some/path']);
+
+    $this->pathMatcher = $this->createMock(PathMatcherInterface::class);
+
     $container = new ContainerBuilder();
     $container->set('string_translation', $this->getStringTranslationStub());
-    $container->set('url_generator', $url_generator);
+    $container->set('url_generator', $this->urlGenerator);
     $container->set('request_stack', $request_stack);
     $container->set('cache_contexts_manager', $context_manager);
+    $container->set('redirect.destination', $redirect_destination);
+    $container->set('path.matcher', $this->pathMatcher);
     \Drupal::setContainer($container);
 
     $this->block = SamlLoginBlock::create($container, [], 'saml_login', ['provider' => 'stanford_samlauth']);
@@ -86,10 +116,28 @@ class SamlLoginBlockTest extends UnitTestCase {
    * Test build render array is structured correctly.
    */
   public function testBuild() {
+    $this->pathMatcher->method('isFrontPage')->willReturn(FALSE);
+    $this->urlGenerator->expects($this->once())
+      ->method('generateFromRoute')
+      ->with('samlauth.saml_controller_login', ['destination' => '/some/path'])
+      ->willReturn('/foo-bar');
     $build = $this->block->build();
     $this->assertCount(1, $build);
     $this->assertArrayHasKey('login', $build);
     $this->assertEquals( 'html_tag', $build['login']['#type']);
+    $this->assertEquals('/foo-bar', $build['login']['#attributes']['href']);
+  }
+
+  /**
+   * Test that no destination is forwarded when on the front page.
+   */
+  public function testBuildOnFrontPage() {
+    $this->pathMatcher->method('isFrontPage')->willReturn(TRUE);
+    $this->urlGenerator->expects($this->once())
+      ->method('generateFromRoute')
+      ->with('samlauth.saml_controller_login', [])
+      ->willReturn('/foo-bar');
+    $build = $this->block->build();
     $this->assertEquals('/foo-bar', $build['login']['#attributes']['href']);
   }
 
