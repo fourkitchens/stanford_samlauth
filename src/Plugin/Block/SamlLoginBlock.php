@@ -5,13 +5,12 @@ namespace Drupal\stanford_samlauth\Plugin\Block;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Routing\RedirectDestination;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
-use Drupal\path_alias\AliasManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -32,18 +31,11 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
   private RedirectDestination $redirectDestination;
 
   /**
-   * Internal path to the front page.
+   * PathMatcher service.
    *
-   * @var string
+   * @var \Drupal\Core\Path\PathMatcherInterface
    */
-  private mixed $frontPage;
-
-  /**
-   * PathAliasManager service.
-   *
-   * @var \Drupal\path_alias\AliasManagerInterface
-   */
-  private AliasManagerInterface $pathAliasManager;
+  private PathMatcherInterface $pathMatcher;
 
   /**
    * {@inheritDoc}
@@ -54,8 +46,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
       $plugin_id,
       $plugin_definition,
       $container->get('redirect.destination'),
-      $container->get('config.factory'),
-      $container->get('path_alias.manager')
+      $container->get('path.matcher')
     );
   }
 
@@ -69,14 +60,14 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * @param array $plugin_definition
    *   Plugin definition.
    * @param \Drupal\Core\Routing\RedirectDestination $redirectDestination
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $configFactory
-   * @param \Drupal\path_alias\AliasManagerInterface $pathAliasManager
+   *   The redirect destination service.
+   * @param \Drupal\Core\Path\PathMatcherInterface $pathMatcher
+   *   The path matcher service.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RedirectDestination $redirectDestination, ConfigFactoryInterface $configFactory, AliasManagerInterface $pathAliasManager) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RedirectDestination $redirectDestination, PathMatcherInterface $pathMatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->redirectDestination = $redirectDestination;
-    $this->frontPage = $configFactory->get('system.site')->get('page.front');
-    $this->pathAliasManager = $pathAliasManager;
+    $this->pathMatcher = $pathMatcher;
   }
 
   /**
@@ -128,20 +119,21 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
   /**
    * Get the destination of the current request.
    *
-   * * Returns any destination parameter if present in the current URL.
-   *   E.g. `stanford.edu?destination=/foo/bar`.
-   * * Otherwise the current path.
-   * * Except if that's the homepage, in which case an empty array is returned.
-   *
-   * This ensures that someone clicking the log-in button on the homepage does
-   * not get redirected back to the homepage post-login and instead sees the
+   * When the block is rendered on the front page, returns an empty array so
+   * that no `destination` parameter is appended to the login URL. This ensures
+   * that someone clicking the log-in button on the homepage does not get
+   * redirected back to the homepage post-login and instead sees the site's
    * standard post-login page (dashboard, etc.).
    *
+   * Otherwise, returns the current redirect destination as an array so that
+   * the user is returned to the page they logged in from.
+   *
    * @return array
+   *   Either an empty array or a `['destination' => ...]` array suitable for
+   *   passing as route parameters to the login URL.
    */
   private function getDestination(): array {
-    $front_alias = $this->pathAliasManager->getAliasByPath($this->frontPage);
-    if ($this->redirectDestination->get() === '/' || $this->redirectDestination->get() === $front_alias) {
+    if ($this->pathMatcher->isFrontPage()) {
       return [];
     }
     return $this->redirectDestination->getAsArray();
