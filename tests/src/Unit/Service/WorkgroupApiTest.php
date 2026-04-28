@@ -95,7 +95,7 @@ class WorkgroupApiTest extends UnitTestCase {
 
       case $this->authname:
         $body = [
-          'members' => [['name' => 'valid:workgroup']],
+          'members' => ['valid:workgroup'],
         ];
         break;
 

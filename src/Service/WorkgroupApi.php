@@ -181,6 +181,7 @@ class WorkgroupApi implements WorkgroupApiInterface {
       'query' => [
         'type' => $type,
         'id' => $id,
+        'lite' => 'true',
       ],
     ];
     $api_url = Settings::get('stanford_samlauth.workgroup_api', self::WORKGROUP_API);
@@ -202,16 +203,13 @@ class WorkgroupApi implements WorkgroupApiInterface {
   public function getAllUserWorkgroups(string $authname): array {
     $workgroup_names = [];
     if ($user_data = $this->callApi(NULL, $authname)) {
-      foreach ($user_data['members'] as $user_member) {
-        $workgroup_names[] = $user_member['name'];
-      }
+      $workgroup_names = $user_data['members'];
+
       $includeAdmins = $this->configFactory->get('stanford_samlauth.settings')
         ->get('role_mapping.workgroup_api.include_admins');
 
       if ($includeAdmins) {
-        foreach ($user_data['administrators'] as $user_member) {
-          $workgroup_names[] = $user_member['name'];
-        }
+        $workgroup_names = array_merge($workgroup_names, $user_data['administrators']);
       }
     }
 
