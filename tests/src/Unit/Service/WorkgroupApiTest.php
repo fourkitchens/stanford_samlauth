@@ -89,13 +89,13 @@ class WorkgroupApiTest extends UnitTestCase {
     switch ($options['query']['id']) {
       case 'uit:sws':
         $body = [
-          'results' => [],
+          'members' => [],
         ];
         break;
 
       case $this->authname:
         $body = [
-          'results' => [['name' => 'valid:workgroup']],
+          'members' => [['name' => 'valid:workgroup']],
         ];
         break;
 
