@@ -9,7 +9,7 @@ use Drupal\Core\Cache\Cache;
 use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
-use Drupal\Core\Routing\RedirectDestination;
+use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\Translatablemarkup;
 use Drupal\Core\Url;
@@ -27,9 +27,9 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
   /**
    * RedirectDestination service.
    *
-   * @var \Drupal\Core\Routing\RedirectDestination
+   * @var \Drupal\Core\Routing\RedirectDestinationInterface
    */
-  private RedirectDestination $redirectDestination;
+  private RedirectDestinationInterface $redirectDestination;
 
   /**
    * PathMatcher service.
@@ -65,7 +65,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    * @param \Drupal\Core\Path\PathMatcherInterface $pathMatcher
    *   The path matcher service.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RedirectDestination $redirectDestination, PathMatcherInterface $pathMatcher) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RedirectDestinationInterface $redirectDestination, PathMatcherInterface $pathMatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->redirectDestination = $redirectDestination;
     $this->pathMatcher = $pathMatcher;
@@ -133,7 +133,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    *   Either an empty array or a `['destination' => ...]` array suitable for
    *   passing as route parameters to the login URL.
    */
-  private function getDestination(): array {
+  protected function getDestination(): array {
     if ($this->pathMatcher->isFrontPage()) {
       return [];
     }
