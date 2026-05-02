@@ -6,7 +6,7 @@ use Drupal\Core\Cache\Context\CacheContextsManager;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Path\PathMatcherInterface;
-use Drupal\Core\Routing\RedirectDestination;
+use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Routing\UrlGeneratorInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\stanford_samlauth\Plugin\Block\SamlLoginBlock;
@@ -45,7 +45,7 @@ class SamlLoginBlockTest extends UnitTestCase {
   /**
    * The redirect destination mock.
    *
-   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Core\Routing\RedirectDestination
+   * @var \PHPUnit\Framework\MockObject\MockObject|\Drupal\Core\Routing\RedirectDestinationInterface
    */
   protected $redirectDestination;
 
@@ -63,7 +63,7 @@ class SamlLoginBlockTest extends UnitTestCase {
     $context_manager = $this->createMock(CacheContextsManager::class);
     $context_manager->method('assertValidTokens')->willReturn(TRUE);
 
-    $this->redirectDestination = $this->createMock(RedirectDestination::class);
+    $this->redirectDestination = $this->createMock(RedirectDestinationInterface::class);
     $this->redirectDestination->method('getAsArray')->willReturn(['destination' => '/some/path']);
 
     $this->pathMatcher = $this->createMock(PathMatcherInterface::class);
@@ -73,7 +73,7 @@ class SamlLoginBlockTest extends UnitTestCase {
     $container->set('url_generator', $this->urlGenerator);
     $container->set('request_stack', $request_stack);
     $container->set('cache_contexts_manager', $context_manager);
-    $container->set('redirect.destination', $redirect_destination);
+    $container->set('redirect.destination', $this->redirectDestination);
     $container->set('path.matcher', $this->pathMatcher);
     \Drupal::setContainer($container);
 
@@ -101,7 +101,7 @@ class SamlLoginBlockTest extends UnitTestCase {
    * Test anonymous users would access the block, authenticated would not.
    */
   public function testAccess() {
-    $this->assertContains('url.path', $this->block->getCacheContexts());
+    $this->assertContains('url', $this->block->getCacheContexts());
 
     $account = $this->createMock(AccountInterface::class);
     $account->method('isAnonymous')->willReturn(TRUE);
