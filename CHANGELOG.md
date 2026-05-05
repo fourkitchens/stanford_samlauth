@@ -1,5 +1,13 @@
 # Stanford SamlAuth
 
+1.2.2
+--------------------------------------------------------------------------------
+_Release Date: 2026-05-05_
+
+- Don't force a redirect back to the homepage 2.x
+- Use lite workgroup api endpoint
+- Update workgroup api response structure
+
 1.2.1
 --------------------------------------------------------------------------------
 _Release Date: 2025-02-25_
