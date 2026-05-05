@@ -5,12 +5,13 @@ namespace Drupal\stanford_samlauth\Plugin\Block;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Routing\RedirectDestinationInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Provides a 'Saml Login Block' block.
@@ -23,11 +24,18 @@ use Symfony\Component\HttpFoundation\RequestStack;
 class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterface {
 
   /**
-   * Current uri the block is displayed on.
+   * RedirectDestination service.
    *
-   * @var string
+   * @var \Drupal\Core\Routing\RedirectDestinationInterface
    */
-  protected $currentUri;
+  private RedirectDestinationInterface $redirectDestination;
+
+  /**
+   * PathMatcher service.
+   *
+   * @var \Drupal\Core\Path\PathMatcherInterface
+   */
+  private PathMatcherInterface $pathMatcher;
 
   /**
    * {@inheritDoc}
@@ -37,7 +45,8 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
       $configuration,
       $plugin_id,
       $plugin_definition,
-      $container->get('request_stack')
+      $container->get('redirect.destination'),
+      $container->get('path.matcher')
     );
   }
 
@@ -50,12 +59,15 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
    *   Block machine name.
    * @param array $plugin_definition
    *   Plugin definition.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $requestStack
-   *   Current request stack object.
+   * @param \Drupal\Core\Routing\RedirectDestination $redirectDestination
+   *   The redirect destination service.
+   * @param \Drupal\Core\Path\PathMatcherInterface $pathMatcher
+   *   The path matcher service.
    */
-  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RequestStack $requestStack) {
+  public function __construct(array $configuration, string $plugin_id, array $plugin_definition, RedirectDestinationInterface $redirectDestination, PathMatcherInterface $pathMatcher) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
-    $this->currentUri = $requestStack->getCurrentRequest()?->getPathInfo();
+    $this->redirectDestination = $redirectDestination;
+    $this->pathMatcher = $pathMatcher;
   }
 
   /**
@@ -86,7 +98,7 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
     $context = parent::getCacheContexts();
     // Make the block cache different for each page since the login link has a
     // destination parameter.
-    return Cache::mergeContexts($context, ['url.path']);
+    return Cache::mergeContexts($context, ['url']);
   }
 
   /**
@@ -105,10 +117,33 @@ class SamlLoginBlock extends BlockBase implements ContainerFactoryPluginInterfac
   }
 
   /**
+   * Get the destination of the current request.
+   *
+   * When the block is rendered on the front page, returns an empty array so
+   * that no `destination` parameter is appended to the login URL. This ensures
+   * that someone clicking the log-in button on the homepage does not get
+   * redirected back to the homepage post-login and instead sees the site's
+   * standard post-login page (dashboard, etc.).
+   *
+   * Otherwise, returns the current redirect destination as an array so that
+   * the user is returned to the page they logged in from.
+   *
+   * @return array
+   *   Either an empty array or a `['destination' => ...]` array suitable for
+   *   passing as route parameters to the login URL.
+   */
+  protected function getDestination(): array {
+    if ($this->pathMatcher->isFrontPage()) {
+      return [];
+    }
+    return $this->redirectDestination->getAsArray();
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function build() {
-    $url = Url::fromRoute('samlauth.saml_controller_login', ['destination' => $this->currentUri]);
+    $url = Url::fromRoute('samlauth.saml_controller_login', $this->getDestination());
     $build = [];
     $build['login'] = [
       '#type' => 'html_tag',
