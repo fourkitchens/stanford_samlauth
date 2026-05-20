@@ -67,6 +67,9 @@ stanford_samlauth.settings:
             timeout:
               type: integer
               label: API Request timeout limit
+            include_admins:
+              type: boolean
+              label: Include administrators for role mapping
         reevaluate:
           type: string
           label: Reevaluation rule

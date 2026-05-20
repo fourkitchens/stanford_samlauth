@@ -12,4 +12,5 @@ role_mapping:
     cert: ''
     key: ''
     timeout: 30
+    include_admins: false
   mapping: {}

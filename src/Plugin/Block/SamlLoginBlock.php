@@ -5,6 +5,7 @@ namespace Drupal\stanford_samlauth\Plugin\Block;
 use Drupal\Core\Access\AccessResult;
 use Drupal\Core\Block\BlockBase;
 use Drupal\Core\Cache\Cache;
+use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Path\PathMatcherInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
